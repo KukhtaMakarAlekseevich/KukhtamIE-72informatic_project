@@ -1,0 +1,72 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import time
+
+def generate_data():
+    air_pollution = np.random.rand() * 100  # загрязнение воздуха, например, от 0 до 100
+    wind_speed = np.random.rand() * 20  # скорость ветра от 0 до 20 м/с
+    wind_direction = np.random.uniform(0, 360)  # направление ветра в градусах
+    return air_pollution, wind_speed, wind_direction
+
+
+# Функция для построения графиков
+def plot_graphs(air_pollution_list, wind_speed_list, wind_direction_list):
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+# График загрязнения воздуха
+    axs[0].plot(air_pollution_list, label='Загрязнение воздуха')
+    axs[0].set_title('Загрязнение воздуха')
+    axs[0].set_xlabel('График загрязнения воздуха')
+    axs[0].set_ylabel('Уровень загрязнения')
+    axs[0].legend()
+
+# График скорости ветра
+    axs[1].plot(wind_speed_list, label='Скорость ветра', color='orange')
+    axs[1].set_title('Скорость ветра')
+    axs[1].set_xlabel('График скорости ветра')
+    axs[1].set_ylabel('Скорость (м/с)')
+    axs[1].legend()
+
+# График направления ветра
+    axs[2].plot(wind_direction_list, label='Направление ветра', color='green')
+    axs[2].set_title('Направление ветра')
+    axs[2].set_xlabel('График направления ветра')
+    axs[2].set_ylabel('Градусы')
+    axs[2].legend()
+
+    plt.tight_layout()
+    plt.show()
+# Основная функция
+def main():
+    air_pollution_list = []
+    wind_speed_list = []
+    wind_direction_list = []
+
+    try:
+        while True:
+            air_pollution, wind_speed, wind_direction = generate_data()
+
+# Добавляем новые данные
+            air_pollution_list.append(air_pollution)
+            wind_speed_list.append(wind_speed)
+            wind_direction_list.append(wind_direction)
+
+            print(
+                f"Новое значение: Загрязнение={air_pollution:.2f}, Скорость={wind_speed:.2f}, Направление={wind_direction:.2f}°")
+
+# Построение графиков
+            plot_graphs(air_pollution_list, wind_speed_list, wind_direction_list)
+
+# Открываем розу ветров
+            plot_wind_rose(wind_direction)
+
+# Ждем минуту перед следующей итерацией
+            print("Ожидание 30 секунд перед следующими данными...")
+            time.sleep(30)
+    except KeyboardInterrupt:
+        print("Завершение программы по запросу пользователя.")
+
+
+# Запуск программы
+if __name__ == '__main__':
+    main()
