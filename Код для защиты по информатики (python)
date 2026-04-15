@@ -2,32 +2,43 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-def generate_data():
-    air_pollution = np.random.rand() * 100  # загрязнение воздуха, например, от 0 до 100
-    wind_speed = np.random.rand() * 20  # скорость ветра от 0 до 20 м/с
-    wind_direction = np.random.uniform(0, 360)  # направление ветра в градусах
-    return air_pollution, wind_speed, wind_direction
+# Начальные значения для данных
+initial_air_pollution = 50
+initial_wind_speed = 5
+initial_wind_direction = 0
+
+
+# Функция для генерации новых данных с небольшим отклонением
+def generate_data(last_air_pollution, last_wind_speed, last_wind_direction):
+    # Отклонения
+    delta_pollution = (np.random.rand() - 0.5) * 10  # от -5 до +5
+    delta_speed = (np.random.rand() - 0.5) * 2  # от -1 до +1
+    delta_direction = (np.random.rand() - 0.5) * 20  # от -10 до +10 градусов
+
+    # Новые значения с отклонениями
+    new_air_pollution = last_air_pollution + delta_pollution
+    new_wind_speed = max(0, last_wind_speed + delta_speed)  # скорость не отрицательная
+    new_wind_direction = (last_wind_direction + delta_direction) % 360  # в диапазоне 0-359
+
+    return new_air_pollution, new_wind_speed, new_wind_direction
 
 
 # Функция для построения графиков
 def plot_graphs(air_pollution_list, wind_speed_list, wind_direction_list):
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 
-# График загрязнения воздуха
     axs[0].plot(air_pollution_list, label='Загрязнение воздуха')
     axs[0].set_title('Загрязнение воздуха')
     axs[0].set_xlabel('График загрязнения воздуха')
     axs[0].set_ylabel('Уровень загрязнения')
     axs[0].legend()
 
-# График скорости ветра
     axs[1].plot(wind_speed_list, label='Скорость ветра', color='orange')
     axs[1].set_title('Скорость ветра')
     axs[1].set_xlabel('График скорости ветра')
     axs[1].set_ylabel('Скорость (м/с)')
     axs[1].legend()
 
-# График направления ветра
     axs[2].plot(wind_direction_list, label='Направление ветра', color='green')
     axs[2].set_title('Направление ветра')
     axs[2].set_xlabel('График направления ветра')
@@ -38,42 +49,53 @@ def plot_graphs(air_pollution_list, wind_speed_list, wind_direction_list):
     plt.show()
 
 
-# Функция для отображения розы ветров
+# Функция для отображения розы ветров, север сверху (0° сверху)
 def plot_wind_rose(wind_direction):
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.set_facecolor('white')
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
 
-# Подписываемся на направление
+    # Важное: Оси для подпися
     directions = ['С', 'СЗ', 'З', 'ЮЗ', 'Ю', 'ЮВ', 'В', 'СВ']
-    angles = np.linspace(0, 2 * np.pi, len(directions), endpoint=False)
-    for angle, dir_label in zip(angles, directions):
-        ax.text(1.1 * np.cos(angle), 1.1 * np.sin(angle), dir_label, ha='center', va='center')
+    angles_deg = np.linspace(0, 360, len(directions), endpoint=False)
 
-    # Рисуем красный угол — линию по направлению ветра
-    # Угол в радианах
-    radian = np.deg2rad(wind_direction)
+    # Смещение, чтобы север был сверху (под 0 градусов)
+    angles_deg = (angles_deg + 90) % 360
+    angles_rad = np.deg2rad(angles_deg)
+
+    for angle, dir_label in zip(angles_rad, directions):
+        x = 1.1 * np.cos(angle)
+        y = 1.1 * np.sin(angle)
+        ax.text(x, y, dir_label, ha='center', va='center')
+
+    # Красный угол по направлению ветра
+    # Угол в радианах, учитывая смещение
+    radian = np.deg2rad((wind_direction + 90) % 360)
     ax.plot([0, np.cos(radian)], [0, np.sin(radian)], color='red', linewidth=3)
 
-    # Добавляем точку из центра
-    ax.plot(0, 0, 'ko')  # точка из центра
+    # Точка из центра
+    ax.plot(0, 0, 'ko')  # центр
     plt.title(f'Роза ветров\nНаправление: {int(wind_direction)}°', fontsize=14)
     plt.axis('off')
     plt.show()
 
 
 # Основная функция
-def main():
-    air_pollution_list = []
-    wind_speed_list = []
-    wind_direction_list = []
+def cod():
+    air_pollution, wind_speed, wind_direction = initial_air_pollution, initial_wind_speed, initial_wind_direction
+
+    air_pollution_list = [air_pollution]
+    wind_speed_list = [wind_speed]
+    wind_direction_list = [wind_direction]
 
     try:
         while True:
-            air_pollution, wind_speed, wind_direction = generate_data()
+            # Генерируем новую порцию данных с отклонениями
+            air_pollution, wind_speed, wind_direction = generate_data(
+                air_pollution, wind_speed, wind_direction)
 
-            # Добавляем новые данные
+            # Добавляем в списки
             air_pollution_list.append(air_pollution)
             wind_speed_list.append(wind_speed)
             wind_direction_list.append(wind_direction)
@@ -81,19 +103,17 @@ def main():
             print(
                 f"Новое значение: Загрязнение={air_pollution:.2f}, Скорость={wind_speed:.2f}, Направление={wind_direction:.2f}°")
 
-            # Построение графиков
+            # Построить графики
             plot_graphs(air_pollution_list, wind_speed_list, wind_direction_list)
 
-            # Открываем розу ветров
+            # Построить розу ветров
             plot_wind_rose(wind_direction)
 
-            # Ждем минуту перед следующей итерацией
             print("Ожидание 30 секунд перед следующими данными...")
             time.sleep(30)
     except KeyboardInterrupt:
         print("Завершение программы по запросу пользователя.")
 
 
-# Запуск программы
 if __name__ == '__main__':
-    main()
+    cod()
