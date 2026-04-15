@@ -20,7 +20,8 @@ def generate_data(last_air_pollution, last_wind_speed, last_wind_direction):
 
 # --- Рисуем графики ---
 def plot_graphs(axs, air_pollution_list, wind_speed_list, wind_direction_list):
-    for ax in axs: ax.cla()  # очистить подграфики
+    for ax in axs:
+        ax.cla()  # очистить подграфики
 
     axs[0].plot(air_pollution_list, label='Загрязнение воздуха')
     axs[0].set_title('Загрязнение воздуха')
@@ -40,12 +41,15 @@ def plot_graphs(axs, air_pollution_list, wind_speed_list, wind_direction_list):
     axs[2].set_ylabel('Градусы')
     axs[2].legend()
 
-    for ax in axs: ax.relim(); ax.autoscale_view()
+    for ax in axs:
+        ax.relim()
+        ax.autoscale_view()
+
     plt.draw()
     plt.pause(0.01)
 
-# --- Рисуем розу ветров ---
-def plot_wind_rose(ax, wind_direction):
+# --- Рисуем розу ветров с учетом формулы ---
+def plot_wind_rose(ax, wind_speed, air_pollution):
     ax.cla()
     ax.set_facecolor('white')
     ax.set_xlim(-1, 1)
@@ -54,18 +58,23 @@ def plot_wind_rose(ax, wind_direction):
     directions = ['С', 'СЗ', 'З', 'ЮЗ', 'Ю', 'ЮВ', 'В', 'СВ']
     angles_deg = np.linspace(0, 360, len(directions), endpoint=False)
     angles_deg = (angles_deg + 90) % 360
-    angles_rad = np.deg2rad(angles_deg)
 
-    for angle, dir_label in zip(angles_rad, directions):
+    # Отметки на розе
+    for angle, dir_label in zip(np.deg2rad(angles_deg), directions):
         x = 1.1 * np.cos(angle)
         y = 1.1 * np.sin(angle)
         ax.text(x, y, dir_label, ha='center', va='center', fontsize=12)
 
-    radian = np.deg2rad((wind_direction + 90) % 360)
+    # Вычисляем угол по формуле
+    angle_deg = (wind_speed * air_pollution) / 360
+    angle_deg = angle_deg % 360  # в пределах 0-359
+    radian = np.deg2rad((angle_deg + 90) % 360)
+
+    # Рисуем линию, указывающую угол
     ax.plot([0, np.cos(radian)], [0, np.sin(radian)], color='red', linewidth=3)
 
     ax.plot(0, 0, 'ko')
-    ax.set_title(f'Угол в рамках которого идёт загрязнение\nНаправление:\n {int(wind_direction)}°', fontsize=14)
+    ax.set_title(f'Угол ветра по формуле\nНаправление: {int(angle_deg)}°', fontsize=14)
     ax.axis('off')
     plt.draw()
     plt.pause(0.01)
@@ -89,21 +98,25 @@ def cod():
 
     try:
         while True:
+            # Генерируем новые данные
             air_pollution, wind_speed, wind_direction = generate_data(
                 air_pollution, wind_speed, wind_direction)
 
+            # Добавляем в списки
             air_pollution_list.append(air_pollution)
             wind_speed_list.append(wind_speed)
             wind_direction_list.append(wind_direction)
 
             print(f"Новое значение: Загрязнение={air_pollution:.2f}, Скорость={wind_speed:.2f}, Направление={wind_direction:.2f}°")
 
-            # Рисуем оба окна
+            # Обновляем графики
             plot_graphs(axs_graphs, air_pollution_list, wind_speed_list, wind_direction_list)
-            plot_wind_rose(ax_rose, wind_direction)
 
-            plt.pause(0.01)  # Обновляем интерфейс
+            # Обновляем розу ветров с учетом формулы
+            plot_wind_rose(ax_rose, wind_speed, air_pollution)
+
             print("Ожидание 30 секунд перед следующими данными...")
+            plt.pause(0.01)
             time.sleep(30)
     except KeyboardInterrupt:
         print("Завершение программы по запросу пользователя.")
