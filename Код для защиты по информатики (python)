@@ -36,6 +36,33 @@ def plot_graphs(air_pollution_list, wind_speed_list, wind_direction_list):
 
     plt.tight_layout()
     plt.show()
+
+
+# Функция для отображения розы ветров
+def plot_wind_rose(wind_direction):
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.set_facecolor('white')
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+
+# Подписываемся на направление
+    directions = ['С', 'СЗ', 'З', 'ЮЗ', 'Ю', 'ЮВ', 'В', 'СВ']
+    angles = np.linspace(0, 2 * np.pi, len(directions), endpoint=False)
+    for angle, dir_label in zip(angles, directions):
+        ax.text(1.1 * np.cos(angle), 1.1 * np.sin(angle), dir_label, ha='center', va='center')
+
+    # Рисуем красный угол — линию по направлению ветра
+    # Угол в радианах
+    radian = np.deg2rad(wind_direction)
+    ax.plot([0, np.cos(radian)], [0, np.sin(radian)], color='red', linewidth=3)
+
+    # Добавляем точку из центра
+    ax.plot(0, 0, 'ko')  # точка из центра
+    plt.title(f'Роза ветров\nНаправление: {int(wind_direction)}°', fontsize=14)
+    plt.axis('off')
+    plt.show()
+
+
 # Основная функция
 def main():
     air_pollution_list = []
@@ -46,7 +73,7 @@ def main():
         while True:
             air_pollution, wind_speed, wind_direction = generate_data()
 
-# Добавляем новые данные
+            # Добавляем новые данные
             air_pollution_list.append(air_pollution)
             wind_speed_list.append(wind_speed)
             wind_direction_list.append(wind_direction)
@@ -54,13 +81,13 @@ def main():
             print(
                 f"Новое значение: Загрязнение={air_pollution:.2f}, Скорость={wind_speed:.2f}, Направление={wind_direction:.2f}°")
 
-# Построение графиков
+            # Построение графиков
             plot_graphs(air_pollution_list, wind_speed_list, wind_direction_list)
 
-# Открываем розу ветров
+            # Открываем розу ветров
             plot_wind_rose(wind_direction)
 
-# Ждем минуту перед следующей итерацией
+            # Ждем минуту перед следующей итерацией
             print("Ожидание 30 секунд перед следующими данными...")
             time.sleep(30)
     except KeyboardInterrupt:
