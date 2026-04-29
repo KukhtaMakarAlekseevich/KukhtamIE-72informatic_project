@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-#Инициализация начальных данных
+# Инициализация начальных данных
 initial_air_pollution = 50
 initial_wind_speed = 5
 initial_wind_direction = 0
@@ -18,86 +18,67 @@ def generate_data(last_air_pollution, last_wind_speed, last_wind_direction):
 
     return new_air_pollution, new_wind_speed, new_wind_direction
 
-#Рисуем графики
+# Графики
 def plot_graphs(axs, air_pollution_list, wind_speed_list, wind_direction_list):
-    for ax in axs: ax.cla()  # очистить подграфики
-
-    axs[0].plot(air_pollution_list, label='Загрязнение воздуха')
+    for ax in axs:
+        ax.cla()
+    axs[0].plot(air_pollution_list)
     axs[0].set_title('Загрязнение воздуха')
-    axs[0].set_xlabel('Время')
-    axs[0].set_ylabel('Уровень загрязнения')
-    axs[0].legend()
-
-    axs[1].plot(wind_speed_list, label='Скорость ветра', color='orange')
+    axs[1].plot(wind_speed_list, color='orange')
     axs[1].set_title('Скорость ветра')
-    axs[1].set_xlabel('Время')
-    axs[1].set_ylabel('Скорость (м/с)')
-    axs[1].legend()
-
-    axs[2].plot(wind_direction_list, label='Направление ветра', color='green')
+    axs[2].plot(wind_direction_list, color='green')
     axs[2].set_title('Направление ветра')
-    axs[2].set_xlabel('Время')
-    axs[2].set_ylabel('Градусы')
-    axs[2].legend()
+    for ax in axs:
+        ax.relim()
+        ax.autoscale_view()
 
-    for ax in axs: ax.relim(); ax.autoscale_view()
-    plt.draw()
-    plt.pause(0.01)
-
-# --- Рисуем розу ветров ---
-def plot_wind_rose(ax, wind_direction):
-    ax.cla()
+# Функция для отрисовки розы ветров с ориентацией norte вверх
+def plot_wind_rose(ax, wind_direction, wind_speed, air_pollution, rotation_deg=0):
+    ax.clear()
     ax.set_facecolor('white')
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
 
-    def plot_three_lines(wind_speed, air_pollution, offset_deg=15):
-        fig, ax = plt.subplots()
-        ax.cla()
-        ax.set_facecolor('white')
-        ax.set_xlim(-1, 1)
-        ax.set_ylim(-1, 1)
-
+    def plot_three_lines(wind_speed, air_pollution, offset_deg=15, rotation=0):
+# Названия сторон света
         directions = ['С', 'СЗ', 'З', 'ЮЗ', 'Ю', 'ЮВ', 'В', 'СВ']
+# Начальные углы (без учета вращения)
         angles_deg = np.linspace(0, 360, len(directions), endpoint=False)
-        angles_deg = (angles_deg + 90) % 360  # чтобы 0 было сверху (север)
+# Смещение, чтобы север был сверху (90 градусов)
+        angles_deg = (angles_deg + 90) % 360
+        angles_rad = np.deg2rad(angles_deg)
 
-        # Метки сторон
+# Метки сторон
         for angle, label in zip(np.deg2rad(angles_deg), directions):
             x = 1.1 * np.cos(angle)
             y = 1.1 * np.sin(angle)
             ax.text(x, y, label, ha='center', va='center', fontsize=12)
 
-        # Расчет угла по формуле
+# Основной угол по формуле
         base_angle_deg = (wind_speed * air_pollution) * (100 / 360)
-        base_angle_deg = base_angle_deg % 360
+        base_angle_deg = (base_angle_deg - 90 + rotation) % 360
 
-        # Радианы для трех линий: основной, и две с смещением
-        angles = [
-            np.deg2rad((base_angle_deg + 90) % 360),
-            np.deg2rad(((base_angle_deg + offset_deg) + 90) % 360),
-            np.deg2rad(((base_angle_deg - offset_deg) + 90) % 360)
+# Радианы для линий
+        angles_lines = [
+            np.deg2rad((base_angle_deg + 90 + rotation) % 360),
+            np.deg2rad(((base_angle_deg + offset_deg) + 90 + rotation) % 360),
+            np.deg2rad(((base_angle_deg - offset_deg) + 90 + rotation) % 360)
         ]
 
-        length = 0.8  # длина линий
-
-        # Рисуем три линии из центра
-        for angle in angles:
+        length = 0.8
+        for angle in angles_lines:
             x_end = length * np.cos(angle)
             y_end = length * np.sin(angle)
             ax.plot([0, x_end], [0, y_end], color='red', linewidth=3)
 
-        # Центр
+# Центр
         ax.plot(0, 0, 'ko')
         ax.set_title(f'Основной угол: {int(base_angle_deg)}°', fontsize=14)
         ax.axis('off')
-        plt.show()
 
-    # Пример использования:
-    wind_speed = 3
-    air_pollution = 2
-    plot_three_lines(wind_speed, air_pollution)
+    plot_three_lines(wind_speed, air_pollution, offset_deg=15, rotation=rotation_deg)
 
+# Основная функция
 def cod():
     air_pollution, wind_speed, wind_direction = initial_air_pollution, initial_wind_speed, initial_wind_direction
 
@@ -105,18 +86,18 @@ def cod():
     wind_speed_list = [wind_speed]
     wind_direction_list = [wind_direction]
 
-    plt.ion()  # Включаем интерактивный режим отображения
-
-    # Окно с графиками
+    plt.ion()
+# создаем фигуры для графиков и розы ветров
     fig_graphs, axs_graphs = plt.subplots(1, 3, figsize=(15, 5))
     fig_graphs.canvas.manager.set_window_title('Графики')
 
-    # Окно с розой ветров
     fig_rose, ax_rose = plt.subplots(figsize=(6, 6))
+# установка названия окна
     fig_rose.canvas.manager.set_window_title('Роза ветров')
 
     try:
         while True:
+# Генерация данных
             air_pollution, wind_speed, wind_direction = generate_data(
                 air_pollution, wind_speed, wind_direction)
 
@@ -126,15 +107,21 @@ def cod():
 
             print(f"Новое значение: Загрязнение={air_pollution:.2f}, Скорость={wind_speed:.2f}, Направление={wind_direction:.2f}°")
 
-            # Рисуем оба окна
-            plot_graphs(axs_graphs, air_pollution_list, wind_speed_list, wind_direction_list)
-            plot_wind_rose(ax_rose, wind_direction)
+# Вычисляем вращение (случайно и с поправкой)
+            base_rotation = np.random.uniform(-5, 5)
+            rotate_amount = np.random.uniform(0, 360)
+            total_rotation = (wind_direction + rotate_amount) % 360 + base_rotation
 
-            plt.pause(0.01)  # Обновляем интерфейс
+# Обновляем графики
+            plot_graphs(axs_graphs, air_pollution_list, wind_speed_list, wind_direction_list)
+            plot_wind_rose(ax_rose, wind_direction, wind_speed, air_pollution, rotation_deg=total_rotation)
+
+            plt.pause(0.01)
             print("Ожидание 30 секунд перед следующими данными...")
             time.sleep(30)
+
     except KeyboardInterrupt:
-        print("Завершение программы по запросу пользователя.")
+        print("Завершение программы.")
     finally:
         plt.ioff()
         plt.show()
